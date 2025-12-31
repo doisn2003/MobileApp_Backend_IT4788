@@ -19,11 +19,11 @@ exports.register = async (req, res) => {
         if (existingEmail) {
             return sendResponse(res, 400, "00032", "Một tài khoản với địa chỉ email này đã tồn tại.");
         }
-        
+
         // Check 3: Username tồn tại (Mã 00084 - phỏng đoán từ bảng lỗi)
         const existingUser = await User.findOne({ username });
         if (existingUser) {
-             return sendResponse(res, 400, "00084", "Đã có một người dùng với tên người dùng này.");
+            return sendResponse(res, 400, "00084", "Đã có một người dùng với tên người dùng này.");
         }
 
         // Check 4: Validate Password (Mã 00027/00040)
@@ -75,9 +75,15 @@ exports.login = async (req, res) => {
         }
 
         // Tạo Token
+        // Check secret
+        const secret = process.env.JWT_SECRET || 'default_secret';
+        if (!process.env.JWT_SECRET) {
+            console.warn("⚠️  WARNING: JWT_SECRET is missing in .env. Using default secret.");
+        }
+
         const token = jwt.sign(
             { id: user._id, role: user.role },
-            process.env.JWT_SECRET,
+            secret,
             { expiresIn: '30d' }
         );
 
@@ -93,6 +99,41 @@ exports.login = async (req, res) => {
         };
         return sendResponse(res, 200, "00047", "Bạn đã đăng nhập thành công.", responseData);
 
+    } catch (error) {
+        console.error(error);
+        return sendResponse(res, 500, "00008", "Đã xảy ra lỗi máy chủ nội bộ.");
+    }
+};
+
+// Quên mật khẩu (Forgot Password)
+exports.forgotPassword = async (req, res) => {
+    try {
+        const { email } = req.body;
+
+        if (!email) {
+            return sendResponse(res, 400, "00038", "Vui lòng cung cấp email!");
+        }
+
+        const user = await User.findOne({ email });
+        if (!user) {
+            return sendResponse(res, 404, "00036", "Không tìm thấy tài khoản với địa chỉ email này.");
+        }
+
+        // Trong thực tế sẽ gửi email ở đây.
+        // Hiện tại chỉ trả về success để mock
+        return sendResponse(res, 200, "00048", "Vui lòng kiểm tra email để lấy lại mật khẩu.");
+
+    } catch (error) {
+        console.error(error);
+        return sendResponse(res, 500, "00008", "Đã xảy ra lỗi máy chủ nội bộ.");
+    }
+};
+
+// Đăng xuất (Logout)
+exports.logout = async (req, res) => {
+    try {
+        // Vì dùng JWT stateless, server không cần làm gì nhiều trừ khi có blacklist
+        return sendResponse(res, 200, "00049", "Đăng xuất thành công.");
     } catch (error) {
         console.error(error);
         return sendResponse(res, 500, "00008", "Đã xảy ra lỗi máy chủ nội bộ.");
