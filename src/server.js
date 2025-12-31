@@ -7,6 +7,7 @@ const express = require('express');
 const app = express();
 const connectDB = require('./configs/db');
 const authRoute = require('./routes/auth.route');
+const groupRoutes = require('./routes/group.route');
 const PORT = process.env.PORT || 5000;
 
 // 1. Connect DB
@@ -23,6 +24,7 @@ app.use(express.json());
 // Và Login là: /it4788/login (thực tế trong bảng là user/login)
 // Nên ta sẽ mount như sau:
 app.use('/it4788/user', authRoute); 
+app.use('/it4788/user/group', groupRoutes);
 
 // Route test server
 app.get('/', (req, res) => {

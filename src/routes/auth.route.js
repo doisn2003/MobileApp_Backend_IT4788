@@ -9,4 +9,10 @@ router.post('/', authController.register); // Lưu ý: file server.js sẽ mount
 // Login: POST /user/login/
 router.post('/login', authController.login);
 
+// Logout: POST /user/logout/
+router.post('/logout', authController.logout);
+
+// Forgot Password: POST /user/forgot-password/
+router.post('/forgot-password', authController.forgotPassword);
+
 module.exports = router;
