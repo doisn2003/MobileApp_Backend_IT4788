@@ -8,6 +8,7 @@ const app = express();
 const connectDB = require('./configs/db');
 const authRoute = require('./routes/auth.route');
 const groupRoutes = require('./routes/group.route');
+const adminRoutes = require('./routes/admin.route');
 const PORT = process.env.PORT || 5000;
 
 // 1. Connect DB
@@ -25,6 +26,7 @@ app.use(express.json());
 // Nên ta sẽ mount như sau:
 app.use('/it4788/user', authRoute); 
 app.use('/it4788/user/group', groupRoutes);
+app.use('/it4788/admin', adminRoutes);
 
 // Route test server
 app.get('/', (req, res) => {
