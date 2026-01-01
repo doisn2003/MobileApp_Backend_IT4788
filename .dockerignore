@@ -1,36 +1,30 @@
-# flyctl launch added from .gitignore
-# Node
-**\node_modules
+# --- Dependencies ---
+node_modules
+npm-debug.log
+yarn-debug.log
+yarn-error.log
+pnpm-debug.log
 
-# Environment
-**\.env
-**\.env.local
-**\.env.*.local
+# --- Git & Docker ---
+.git
+.gitignore
 
-# Logs
-**\npm-debug.log*
-**\yarn-debug.log*
-**\yarn-error.log*
-**\pnpm-debug.log*
-**\*.log
+# --- Environment Secrets (CỰC KỲ QUAN TRỌNG) ---
+.env
+.env.production
+.env.local
+.env.*
 
-# Editor directories and files
-**\.vscode
-**\.idea
-**\.DS_Store
+# --- Editor & OS Files ---
+.vscode
+.idea
+.DS_Store
+Thumbs.db
 
-# Build output
-**\dist
-**\build
+# --- Build Outputs ---
+dist
+build
+coverage
 
-# Coverage
-**\coverage
-
-# Misc
-**\*.sqlite
-**\*.tgz
-
-# Lockfiles (optional - keep if you want reproducible installs)
-# package-lock.json
-# yarn.lock
+# --- Fly.io Config ---
 fly.toml
