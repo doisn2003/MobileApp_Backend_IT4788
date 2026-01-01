@@ -174,3 +174,89 @@ exports.editUser = async (req, res) => {
         return sendResponse(res, 500, "00008", "Lỗi server");
     }
 };
+
+// Đổi mật khẩu
+exports.changePassword = async (req, res) => {
+    try {
+        const { oldPassword, newPassword } = req.body;
+        const userId = req.user._id;
+
+        if (!oldPassword || !newPassword || oldPassword.length < 6 || newPassword.length < 6 || oldPassword.length > 20 || newPassword.length > 20) {
+            return sendResponse(res, 400, "00069", "Vui lòng cung cấp mật khẩu cũ và mới dài hơn 6 ký tự và ngắn hơn 20 ký tự.");
+        }
+
+        const user = await User.findById(userId);
+        const isMatch = await bcrypt.compare(oldPassword, user.password);
+        if (!isMatch) {
+            return sendResponse(res, 400, "00072", "Mật khẩu cũ của bạn không khớp với mật khẩu bạn nhập.");
+        }
+
+        if (oldPassword === newPassword) {
+            return sendResponse(res, 400, "00073", "Mật khẩu mới của bạn không nên giống với mật khẩu cũ.");
+        }
+
+        const salt = await bcrypt.genSalt(10);
+        user.password = await bcrypt.hash(newPassword, salt);
+        await user.save();
+
+        return sendResponse(res, 200, "00076", "Mật khẩu của bạn đã được thay đổi thành công.");
+    } catch (error) {
+        return sendResponse(res, 500, "00008", "Lỗi server");
+    }
+};
+
+// Gửi mã xác thực (Mock)
+exports.sendVerificationCode = async (req, res) => {
+    try {
+        const { email } = req.body;
+        if (!email) {
+            return sendResponse(res, 400, "00005", "Vui lòng cung cấp đầy đủ thông tin để gửi mã.");
+        }
+        // Logic gửi email thật sẽ ở đây
+        return sendResponse(res, 200, "00048", "Mã đã được gửi đến email của bạn thành công.");
+    } catch (error) {
+        return sendResponse(res, 500, "00008", "Lỗi server");
+    }
+};
+
+// Xác thực email (Mock)
+exports.verifyEmail = async (req, res) => {
+    try {
+        const { code, token } = req.body;
+        if (!code && !token) {
+            return sendResponse(res, 400, "00053", "Vui lòng gửi một mã xác nhận.");
+        }
+        // Mock check
+        if (code === "123456") {
+            return sendResponse(res, 200, "00058", "Địa chỉ email của bạn đã được xác minh thành công.");
+        } else {
+            return sendResponse(res, 400, "00054", "Mã bạn nhập không khớp với mã chúng tôi đã gửi.");
+        }
+    } catch (error) {
+        return sendResponse(res, 500, "00008", "Lỗi server");
+    }
+};
+
+// Refresh Token (Mock)
+exports.refreshToken = async (req, res) => {
+    try {
+        const { refreshToken } = req.body;
+        if (!refreshToken) {
+            return sendResponse(res, 400, "00059", "Vui lòng cung cấp token làm mới.");
+        }
+        // Logic check refresh token DB
+        return sendResponse(res, 200, "00065", "Token đã được làm mới thành công.");
+    } catch (error) {
+        return sendResponse(res, 500, "00008", "Lỗi server");
+    }
+};
+
+// Xóa tài khoản
+exports.deleteAccount = async (req, res) => {
+    try {
+        await User.findByIdAndDelete(req.user._id);
+        return sendResponse(res, 200, "00092", "Tài khoản của bạn đã bị xóa thành công.");
+    } catch (error) {
+        return sendResponse(res, 500, "00008", "Lỗi server");
+    }
+};
