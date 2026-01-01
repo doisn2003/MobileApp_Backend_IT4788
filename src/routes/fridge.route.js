@@ -14,4 +14,10 @@ router.get('/', fridgeController.getFridgeItems);
 // DELETE /fridge/ -> Xóa đồ (Body: { foodName: '...' })
 router.delete('/', fridgeController.deleteFridgeItem);
 
+// PUT /fridge/ -> Cập nhật (Body: { itemId: '...', ... })
+router.put('/', fridgeController.updateFridgeItem);
+
+// GET /fridge/:foodName -> Lấy chi tiết
+router.get('/:foodName', fridgeController.getFridgeItemDetail);
+
 module.exports = router;

@@ -14,4 +14,7 @@ router.get('/', mealController.getMealPlanByDate);
 // DELETE /meal/ -> Xóa kế hoạch
 router.delete('/', mealController.deleteMealPlan);
 
+// PUT /meal/ -> Cập nhật
+router.put('/', mealController.updateMealPlan);
+
 module.exports = router;

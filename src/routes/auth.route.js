@@ -22,4 +22,19 @@ router.get('/', authMiddleware, authController.getMe);
 // Edit User Info: POST /user/edit/
 router.post('/edit', authMiddleware, authController.editUser);
 
+// Change Password: POST /user/change-password/
+router.post('/change-password', authMiddleware, authController.changePassword);
+
+// Send Verification Code: POST /user/send-verification-code/
+router.post('/send-verification-code', authController.sendVerificationCode);
+
+// Verify Email: POST /user/verify-email/
+router.post('/verify-email', authController.verifyEmail);
+
+// Refresh Token: POST /user/refresh-token/
+router.post('/refresh-token', authController.refreshToken);
+
+// Delete Account: DELETE /user/
+router.delete('/', authMiddleware, authController.deleteAccount);
+
 module.exports = router;
