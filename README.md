@@ -129,9 +129,10 @@ Hệ thống không hoạt động theo cá nhân đơn lẻ mà hoạt động 
 Để chạy dự án, cần tạo file `.env` với các biến sau:
 
 ```env
+# Connection string MongoDB
 PORT=3000
-MONGO_URI=mongodb://...        # Connection string MongoDB
-JWT_SECRET=...                # Chuỗi bảo mật cho Token
+MONGO_URI=mongodb+srv://doisn2003:doisn2003@cluster0.nhotv7x.mongodb.net/btl_it4788
+JWT_SECRET=ma_bao_mat_cua_ban # đang môi trường test
 ```
 
 ---
