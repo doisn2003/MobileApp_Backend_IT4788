@@ -9,16 +9,19 @@ const connectDB = require('./configs/db');
 const authRoute = require('./routes/auth.route');
 const groupRoutes = require('./routes/group.route');
 const adminRoutes = require('./routes/admin.route');
+const foodRoutes = require('./routes/food.route');
 const PORT = process.env.PORT || 5000;
 
 // 1. Connect DB
 connectDB();
 
-// 2. Middleware xử lý Body (CỰC KỲ QUAN TRỌNG)
+// 2. Middleware xử lý Body
 // Để đọc được Content-Type: application/x-www-form-urlencoded (như đề yêu cầu)
 app.use(express.urlencoded({ extended: true })); 
 // Để đọc được JSON (dùng cho API create task sau này)
 app.use(express.json());
+// Truy cập qua: http://localhost:3000/uploads/ten_file.jpg
+app.use('/uploads', express.static('uploads'));
 
 // 3. Routes
 // Đề bài yêu cầu đường dẫn cơ sở: https://ABC.def/it4788/ 
@@ -27,7 +30,7 @@ app.use(express.json());
 app.use('/it4788/user', authRoute); 
 app.use('/it4788/user/group', groupRoutes);
 app.use('/it4788/admin', adminRoutes);
-
+app.use('/it4788/food', foodRoutes);
 // Route test server
 app.get('/', (req, res) => {
     res.send('Server IT4788 is running');
