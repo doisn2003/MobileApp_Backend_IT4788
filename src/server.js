@@ -11,6 +11,7 @@ const groupRoutes = require('./routes/group.route');
 const adminRoutes = require('./routes/admin.route');
 const foodRoutes = require('./routes/food.route');
 const fridgeRoutes = require('./routes/fridge.route');
+const shoppingRoutes = require('./routes/shopping.route');
 const PORT = process.env.PORT || 5000;
 
 // 1. Connect DB
@@ -33,6 +34,7 @@ app.use('/it4788/user/group', groupRoutes);
 app.use('/it4788/admin', adminRoutes);
 app.use('/it4788/food', foodRoutes);
 app.use('/it4788/fridge', fridgeRoutes);
+app.use('/it4788/shopping', shoppingRoutes);
 // Route test server
 app.get('/', (req, res) => {
     res.send('Server IT4788 is running');
