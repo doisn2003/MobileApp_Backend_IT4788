@@ -139,3 +139,38 @@ exports.logout = async (req, res) => {
         return sendResponse(res, 500, "00008", "Đã xảy ra lỗi máy chủ nội bộ.");
     }
 };
+
+// Lấy thông tin user (Get Me)
+exports.getMe = async (req, res) => {
+    try {
+        // req.user đã được populate từ authMiddleware
+        const user = req.user;
+        return sendResponse(res, 200, "00047", "Lấy thông tin thành công", user);
+    } catch (error) {
+        console.error(error);
+        return sendResponse(res, 500, "00008", "Lỗi server");
+    }
+};
+
+// Chỉnh sửa thông tin user (Edit User)
+exports.editUser = async (req, res) => {
+    try {
+        const userId = req.user._id;
+        const { username, name, language, timezone, deviceId, avatar } = req.body;
+
+        const updateData = {};
+        if (username) updateData.username = username;
+        if (name) updateData.name = name;
+        if (language) updateData.language = language;
+        if (timezone) updateData.timezone = timezone;
+        if (deviceId) updateData.deviceId = deviceId;
+        if (avatar) updateData.avatar = avatar;
+
+        const updatedUser = await User.findByIdAndUpdate(userId, updateData, { new: true }).select('-password');
+
+        return sendResponse(res, 200, "00047", "Cập nhật thông tin thành công", updatedUser);
+    } catch (error) {
+        console.error(error);
+        return sendResponse(res, 500, "00008", "Lỗi server");
+    }
+};
