@@ -14,12 +14,12 @@ exports.createFridgeItem = async (req, res) => {
 
         // Check 00210: Chưa vào nhóm
         if (!req.user.groupId) {
-             return sendResponse(res, 400, "00210", "Người dùng không thuộc bất kỳ nhóm nào");
+            return sendResponse(res, 400, "00210", "Người dùng không thuộc bất kỳ nhóm nào");
         }
 
         // --- Logic tìm Food ID từ Name ---
         const food = await Food.findOne({ name: foodName, groupId: req.user.groupId });
-        
+
         // Check 00208: Thực phẩm không tồn tại
         if (!food) {
             return sendResponse(res, 404, "00208", "Thực phẩm không tồn tại.");
@@ -58,7 +58,7 @@ exports.getFridgeItems = async (req, res) => {
 
         const items = await FridgeItem.find({ groupId: req.user.groupId })
             .populate('foodId', 'name image unitId categoryId'); // Lấy chi tiết món ăn kèm theo
-            
+
         return sendResponse(res, 200, "00228", "Lấy danh sách đồ tủ lạnh thành công", items);
     } catch (error) {
         return sendResponse(res, 500, "00008", "Lỗi server");
@@ -78,11 +78,66 @@ exports.deleteFridgeItem = async (req, res) => {
 
         // Xóa item
         const result = await FridgeItem.findOneAndDelete({ foodId: food._id, groupId: req.user.groupId });
-        
+
         if (!result) return sendResponse(res, 404, "00213", "Mục tủ lạnh không tồn tại.");
 
         return sendResponse(res, 200, "00224", "Xóa mục trong tủ lạnh thành công");
     } catch (error) {
         return sendResponse(res, 500, "00008", "Lỗi server");
     }
-}
+};
+
+// 4. Cập nhật đồ trong tủ
+exports.updateFridgeItem = async (req, res) => {
+    try {
+        const { itemId, newQuantity, newUseWithin } = req.body;
+
+        if (!itemId) {
+            return sendResponse(res, 400, "00204", "Vui lòng cung cấp id của item tủ lạnh.");
+        }
+        if (!newQuantity && !newUseWithin) {
+            return sendResponse(res, 400, "00204 X", "Vui lòng cung cấp ít nhất một trong các trường cần update.");
+        }
+
+        const item = await FridgeItem.findOne({ _id: itemId, groupId: req.user.groupId });
+        if (!item) {
+            // Không có mã lỗi not found cho update, tạm dùng 404
+            return sendResponse(res, 404, "00213", "Mục tủ lạnh không tồn tại.");
+        }
+
+        if (newQuantity) item.quantity = newQuantity;
+        if (newUseWithin) item.useWithin = newUseWithin;
+
+        await item.save();
+        return sendResponse(res, 200, "00216", "Cập nhật mục tủ lạnh thành công", item);
+
+    } catch (error) {
+        console.error(error);
+        return sendResponse(res, 500, "00008", "Lỗi server");
+    }
+};
+
+// 5. Lấy thông tin 1 item cụ thể (qua foodName param)
+exports.getFridgeItemDetail = async (req, res) => {
+    try {
+        const { foodName } = req.params;
+
+        // Tìm foodId
+        const food = await Food.findOne({ name: foodName, groupId: req.user.groupId });
+        if (!food) {
+            return sendResponse(res, 404, "00208", "Thực phẩm không tồn tại.");
+        }
+
+        const item = await FridgeItem.findOne({ foodId: food._id, groupId: req.user.groupId })
+            .populate('foodId', 'name image unitId categoryId');
+
+        if (!item) {
+            return sendResponse(res, 404, "00213", "Mục tủ lạnh không tồn tại.");
+        }
+
+        return sendResponse(res, 200, "00237", "Lấy item cụ thể thành công", item);
+
+    } catch (error) {
+        return sendResponse(res, 500, "00008", "Lỗi server");
+    }
+};
