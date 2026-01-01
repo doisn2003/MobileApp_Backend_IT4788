@@ -16,7 +16,7 @@ exports.createMealPlan = async (req, res) => {
         }
 
         if (!req.user.groupId) {
-             return sendResponse(res, 400, "00319", "Người dùng không phải là quản trị viên nhóm"); // Mã lỗi tạm dùng chung
+            return sendResponse(res, 400, "00319", "Người dùng không phải là quản trị viên nhóm"); // Mã lỗi tạm dùng chung
         }
 
         // Check 00336: Validate buổi (Sáng/Trưa/Tối)
@@ -72,8 +72,8 @@ exports.getMealPlanByDate = async (req, res) => {
                 $lt: endDate     // Nhỏ hơn đầu ngày hôm sau
             }
         })
-        .populate('foodId', 'name image unitId categoryId') // Lấy thông tin món ăn để hiển thị
-        .sort({ session: 1 }); // Sắp xếp (có thể cần logic sort custom nếu muốn Sáng -> Trưa -> Tối chuẩn xác)
+            .populate('foodId', 'name image unitId categoryId') // Lấy thông tin món ăn để hiển thị
+            .sort({ session: 1 }); // Sắp xếp (có thể cần logic sort custom nếu muốn Sáng -> Trưa -> Tối chuẩn xác)
 
         return sendResponse(res, 200, "00348", "Lấy danh sách thành công", plans);
 
@@ -91,11 +91,47 @@ exports.deleteMealPlan = async (req, res) => {
         if (!planId) return sendResponse(res, 400, "00332", "Vui lòng cung cấp ID kế hoạch");
 
         const deleted = await MealPlan.findOneAndDelete({ _id: planId, groupId: req.user.groupId });
-        
+
         if (!deleted) return sendResponse(res, 404, "00325", "Không tìm thấy kế hoạch");
 
         return sendResponse(res, 200, "00330", "Kế hoạch bữa ăn của bạn đã được xóa thành công");
     } catch (error) {
+        return sendResponse(res, 500, "00008", "Lỗi server");
+    }
+};
+
+// 4. Cập nhật kế hoạch
+exports.updateMealPlan = async (req, res) => {
+    try {
+        const { planId, newFoodName, newName } = req.body;
+
+        if (!planId) return sendResponse(res, 400, "00332", "Vui lòng cung cấp một ID kế hoạch.");
+        if (!newFoodName && !newName) {
+            return sendResponse(res, 400, "00333", "Vui lòng cung cấp ít nhất một trong các trường cần sửa.");
+        }
+
+        const plan = await MealPlan.findOne({ _id: planId, groupId: req.user.groupId });
+        if (!plan) return sendResponse(res, 404, "00325", "Không tìm thấy kế hoạch");
+
+        if (newFoodName) {
+            const food = await Food.findOne({ name: newFoodName, groupId: req.user.groupId });
+            if (!food) return sendResponse(res, 404, "00317", "Không tìm thấy thực phẩm mới");
+            plan.foodId = food._id;
+        }
+
+        if (newName) {
+            const validSessions = ['sáng', 'trưa', 'tối'];
+            if (!validSessions.includes(newName.toLowerCase())) {
+                return sendResponse(res, 400, "00336", "Vui lòng cung cấp một tên hợp lệ, sáng, trưa, tối");
+            }
+            plan.session = newName;
+        }
+
+        await plan.save();
+        return sendResponse(res, 200, "00344", "Cập nhật kế hoạch bữa ăn thành công", plan);
+
+    } catch (error) {
+        console.error(error);
         return sendResponse(res, 500, "00008", "Lỗi server");
     }
 };
