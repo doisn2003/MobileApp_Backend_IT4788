@@ -5,8 +5,10 @@ const authMiddleware = require('../middlewares/authMiddleware');
 
 router.use(authMiddleware);
 
-// POST /fridge/ -> Thêm đồ vào tủ
-router.post('/', fridgeController.createFridgeItem);
+const upload = require('../middlewares/uploadMiddleware');
+
+// POST /fridge/ -> Thêm đồ vào tủ (có thể kèm tạo Food có ảnh)
+router.post('/', upload.single('image'), fridgeController.createFridgeItem);
 
 // GET /fridge/ -> Xem đồ trong tủ
 router.get('/', fridgeController.getFridgeItems);

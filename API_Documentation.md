@@ -295,21 +295,22 @@ Hầu hết các API yêu cầu xác thực qua Header:
 * **Auth**: `Bearer Token`
 * **Response**: `200 OK`
 
-### 5.2 Thêm đồ vào tủ
-* **URL**: `/fridge/`
-* **Method**: `POST`
-* **Content-Type**: `raw (JSON)`
-* **Auth**: `Bearer Token`
-* **Body**:
-  ```json
-  {
-    "foodName": "Thịt bò",
-    "quantity": 2,
-    "useWithin": "2024-12-31",
-    "note": "Mua ở siêu thị A"
-  }
-  ```
-* **Response**: `200 OK`
+### 5.2 Thêm đồ vào tủ (Logic Mới)
+*   **URL**: `/fridge/`
+*   **Method**: `POST`
+*   **Content-Type**: `multipart/form-data`
+*   **Auth**: `Bearer Token`
+*   **Mô tả**: Tự động tạo `Food` nếu món ăn chưa tồn tại (Dựa trên `foodName`).
+*   **Body** (Form-Data):
+    *   `foodName`: (Text) - **Bắt buộc**. Tên món ăn (Ví dụ: Thịt gà).
+    *   `compartment`: (Text) - **Bắt buộc**. `Freezer` (Ngăn đá) hoặc `Cooler` (Ngăn mát/thường). Mặc định là Cooler.
+    *   `quantity`: (Text/Number) - **Bắt buộc**. Số lượng (Ví dụ: 1).
+    *   `unitName`: (Text) - **Bắt buộc**. Đơn vị tính (Ví dụ: kg, hộp). Hệ thống sẽ ghép thành "1 kg" để lưu.
+    *   `categoryName`: (Text) - **Bắt buộc** (nếu là món mới). Danh mục (Ví dụ: Thịt, Rau).
+    *   `useWithin`: (Date) - **Bắt buộc**. Hạn sử dụng (YYYY-MM-DD).
+    *   `note`: (Text) - Optional. Ghi chú.
+    *   `image`: (File) - Optional. Ảnh món ăn (chỉ lưu nếu tạo Food mới).
+*   **Response**: `200 OK`
 
 ### 5.3 Xóa đồ khỏi tủ
 * **URL**: `/fridge/`
