@@ -16,7 +16,6 @@ const fridgeRoutes = require('./routes/fridge.route');
 const shoppingRoutes = require('./routes/shopping.route');
 const recipeRoutes = require('./routes/recipe.route');
 const mealRoutes = require('./routes/meal.route');
-const notificationRoutes = require('./routes/notification.route');
 const cronService = require('./services/cron.service');
 const PORT = process.env.PORT || 5000;
 
@@ -50,7 +49,6 @@ app.use('/it4788/fridge', fridgeRoutes);
 app.use('/it4788/shopping', shoppingRoutes);
 app.use('/it4788/recipe', recipeRoutes);
 app.use('/it4788/meal', mealRoutes);
-app.use('/it4788/notification', notificationRoutes);
 
 // Khởi động cron job
 cronService.start();
