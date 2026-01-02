@@ -260,3 +260,24 @@ exports.deleteAccount = async (req, res) => {
         return sendResponse(res, 500, "00008", "Lỗi server");
     }
 };
+
+// API gửi token thiết bị mỗi khi user đăng nhập
+exports.registerDeviceToken = async (req, res) => {
+    try {
+        const userId = req.user.id; // Lấy từ middleware xác thực (JWT)
+        const { fcmToken } = req.body;
+
+        if (!fcmToken) {
+            return res.status(400).json({ message: "Token is required" });
+        }
+
+        // Dùng $addToSet của MongoDB để tránh trùng lặp token
+        await User.findByIdAndUpdate(userId, {
+            $addToSet: { fcmTokens: fcmToken }
+        });
+
+        return res.status(200).json({ message: "Device token registered successfully" });
+    } catch (error) {
+        return res.status(500).json({ message: error.message });
+    }
+};

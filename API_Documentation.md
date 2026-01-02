@@ -502,3 +502,37 @@ Hầu hết các API yêu cầu xác thực qua Header:
 * **Body**: `{ "recipeId": "..." }`
 * **Response**: `200 OK`
 
+---
+
+## 9. Notification (Thông báo - Kiểm thử)
+
+### 9.1 Test Gửi thông báo đến thiết bị (FCM)
+* **URL**: `/notification/send`
+* **Method**: `POST`
+* **Content-Type**: `raw (JSON)`
+* **Body**:
+  ```json
+  {
+    "tokens": ["YOUR_FCM_TOKEN_HERE"],
+    "title": "Test Notification",
+    "body": "Hello from Postman",
+    "data": { "type": "TEST" }
+  }
+  ```
+* **Response**: `200 OK`
+
+### 9.2 Test Gửi thông báo Chat
+* **URL**: `/notification/chat-test`
+* **Method**: `POST`
+* **Content-Type**: `raw (JSON)`
+* **Body**:
+  ```json
+  {
+    "senderId": "SENDER_USER_ID",
+    "groupMembersIds": ["RECEIVER_ID_1", "RECEIVER_ID_2"],
+    "groupName": "Test Group",
+    "messageContent": "New Message Content"
+  }
+  ```
+* **Response**: `200 OK`
+

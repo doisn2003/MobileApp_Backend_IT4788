@@ -37,4 +37,7 @@ router.post('/refresh-token', authController.refreshToken);
 // Delete Account: DELETE /user/
 router.delete('/', authMiddleware, authController.deleteAccount);
 
+// Register Device Token: POST /user/register-device-token/
+router.post('/register-device-token', authMiddleware, authController.registerDeviceToken);
+
 module.exports = router;

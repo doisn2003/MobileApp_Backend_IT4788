@@ -32,3 +32,6 @@ coverage/
 # Lockfiles (optional - keep if you want reproducible installs)
 # package-lock.json
 # yarn.lock
+
+#firebase
+serviceAccountKey.json
