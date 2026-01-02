@@ -32,3 +32,5 @@ coverage/
 # Lockfiles (optional - keep if you want reproducible installs)
 # package-lock.json
 # yarn.lock
+
+src/configs/serviceAccountKey.json
