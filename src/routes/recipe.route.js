@@ -5,11 +5,13 @@ const authMiddleware = require('../middlewares/authMiddleware');
 
 router.use(authMiddleware);
 
-// POST /recipe/ -> Tạo công thức
-router.post('/', recipeController.createRecipe);
+const upload = require('../middlewares/uploadMiddleware');
 
-// GET /recipe/ -> Lấy công thức (Query: ?foodId=...)
-router.get('/', recipeController.getRecipesByFood);
+// POST /recipe/ -> Tạo công thức
+router.post('/', upload.single('image'), recipeController.createRecipe);
+
+// GET /recipe/ -> Lấy danh sách công thức (Query: ?mode=Gymer...)
+router.get('/', recipeController.getAllRecipes);
 
 // DELETE /recipe/ -> Xóa công thức
 router.delete('/', recipeController.deleteRecipe);
