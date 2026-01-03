@@ -1,6 +1,7 @@
 const Group = require('../models/group');
 const User = require('../models/user');
 const sendResponse = require('../utils/responseHelper');
+const notificationService = require('../services/notification.service');
 
 // 1. Tạo nhóm (Create Group)
 exports.createGroup = async (req, res) => {
@@ -74,6 +75,25 @@ exports.addMember = async (req, res) => {
         memberToAdd.groupId = currentGroup._id;
         await memberToAdd.save();
 
+        // Gửi PUSH notification (về việc được thêm vào nhóm)
+        if (memberToAdd.fcmToken) {
+            try {
+                await notificationService.sendPushNotification(
+                    memberToAdd.fcmToken,
+                    'Chào mừng đến nhóm!',
+                    `Bạn đã được thêm vào nhóm "${currentGroup.name}" bởi ${currentUser.name}`,
+                    { 
+                        type: 'new_member',
+                        groupId: currentGroup._id.toString(),
+                        groupName: currentGroup.name
+                    }
+                );
+            } catch (notifError) {
+                console.error('⚠️  Failed to send notification:', notifError);
+                // Không throw error, vẫn trả về success
+            }
+        }
+
         return sendResponse(res, 200, "00102", "Người dùng thêm vào nhóm thành công");
 
     } catch (error) {
@@ -135,6 +155,25 @@ exports.removeMember = async (req, res) => {
         if (memberUser) {
             memberUser.groupId = null;
             await memberUser.save();
+        }
+
+        // Gửi PUSH notification (về việc bị xoá khỏi nhóm)
+        if (memberToAdd.fcmToken) {
+            try {
+                await notificationService.sendPushNotification(
+                    memberToAdd.fcmToken,
+                    'Bạn đã bị xoá khỏi nhóm!',
+                    `Bạn đã bị xoá khỏi nhóm "${currentGroup.name}" bởi ${currentUser.name}`,
+                    { 
+                        type: 'removed_member',
+                        groupId: currentGroup._id.toString(),
+                        groupName: currentGroup.name
+                    }
+                );
+            } catch (notifError) {
+                console.error('⚠️  Failed to send notification:', notifError);
+                // Không throw error, vẫn trả về success
+            }
         }
 
         return sendResponse(res, 200, "00103", "Xóa thành viên thành công");
