@@ -8,6 +8,9 @@ router.use(authMiddleware);
 // POST /meal/ -> Tạo kế hoạch
 router.post('/', mealController.createMealPlan);
 
+// GET /meal/dates -> Lấy danh sách ngày có bữa ăn
+router.get('/dates', mealController.getMealDates);
+
 // GET /meal/ -> Lấy kế hoạch (Query: ?date=YYYY-MM-DD)
 router.get('/', mealController.getMealPlanByDate);
 

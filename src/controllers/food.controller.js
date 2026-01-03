@@ -154,3 +154,25 @@ exports.deleteFood = async (req, res) => {
         return sendResponse(res, 500, "00152", "Server error");
     }
 };
+
+// 5. Lấy danh sách Categories
+exports.getAllCategories = async (req, res) => {
+    try {
+        const categories = await Category.find({}, 'name description'); // Lấy name và description
+        return sendResponse(res, 200, "00188", "Success", categories);
+    } catch (e) {
+        console.error(e);
+        return sendResponse(res, 500, "00152", "Server error");
+    }
+};
+
+// 6. Lấy danh sách Units
+exports.getAllUnits = async (req, res) => {
+    try {
+        const units = await Unit.find({}, 'name description');
+        return sendResponse(res, 200, "00188", "Success", units);
+    } catch (e) {
+        console.error(e);
+        return sendResponse(res, 500, "00152", "Server error");
+    }
+};

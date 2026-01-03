@@ -135,3 +135,28 @@ exports.updateMealPlan = async (req, res) => {
         return sendResponse(res, 500, "00008", "Lỗi server");
     }
 };
+
+// 5. Lấy danh sách các ngày có bữa ăn (Get dates having meals)
+exports.getMealDates = async (req, res) => {
+    try {
+        if (!req.user.groupId) return sendResponse(res, 400, "00319", "Chưa vào nhóm");
+
+        // Tìm tất cả các plan của group, chỉ lấy trường date
+        const plans = await MealPlan.find({ groupId: req.user.groupId }, 'date');
+
+        // Extract dates and format to YYYY-MM-DD
+        const dates = plans.map(p => {
+            try {
+                return p.date.toISOString().split('T')[0];
+            } catch (e) { return null; }
+        }).filter(d => d);
+
+        // Unique
+        const uniqueDates = [...new Set(dates)];
+
+        return sendResponse(res, 200, "00348", "Lấy danh sách ngày thành công", uniqueDates);
+    } catch (error) {
+        console.error(error);
+        return sendResponse(res, 500, "00008", "Lỗi server");
+    }
+};
