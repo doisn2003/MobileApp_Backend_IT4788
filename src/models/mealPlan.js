@@ -14,8 +14,11 @@ const mealPlanSchema = new mongoose.Schema({
     // Món ăn (Fridge Item)
     foodId: { type: mongoose.Schema.Types.ObjectId, ref: 'Food', required: false },
 
-    // Công thức (Recipe) - New Requirement
+    // Công thức (Recipe)
     recipeId: { type: mongoose.Schema.Types.ObjectId, ref: 'Recipe', required: false },
+
+    // Chế độ ăn (Mode) - Optional (Gymer, Vegan, etc.)
+    mode: { type: String, required: false },
 
     // Thuộc nhóm nào
     groupId: { type: mongoose.Schema.Types.ObjectId, ref: 'Group', required: true },

@@ -6,9 +6,9 @@ const sendResponse = require('../utils/responseHelper');
 // 1. Tạo kế hoạch bữa ăn (Create Meal Plan)
 exports.createMealPlan = async (req, res) => {
     try {
-        // Body: { foodName, timestamp, name, recipeId } 
+        // Body: { foodName, timestamp, name, recipeId, mode } 
         // 'name' là buổi (sáng/trưa/tối)
-        const { foodName, timestamp, name, recipeId } = req.body;
+        const { foodName, timestamp, name, recipeId, mode } = req.body;
 
         // Check 00323: Thiếu trường basics
         if (!timestamp || !name) {
@@ -47,6 +47,7 @@ exports.createMealPlan = async (req, res) => {
             session: name,
             foodId: foodId,      // Optional
             recipeId: recipeId,  // Optional
+            mode: mode,          // Optional (Gymer, Vegan, etc.)
             groupId: req.user.groupId,
             createdBy: req.user._id
         });
@@ -63,7 +64,7 @@ exports.createMealPlan = async (req, res) => {
 // 2. Lấy kế hoạch theo ngày (Get meal plan by date)
 exports.getMealPlanByDate = async (req, res) => {
     try {
-        const { date } = req.query;
+        const { date, mode } = req.query;
 
         if (!date) {
             return sendResponse(res, 400, "00331", "Vui lòng cung cấp ngày");
@@ -73,13 +74,25 @@ exports.getMealPlanByDate = async (req, res) => {
         const endDate = new Date(date);
         endDate.setDate(endDate.getDate() + 1);
 
-        const plans = await MealPlan.find({
+        const filter = {
             groupId: req.user.groupId,
             date: {
                 $gte: startDate,
                 $lt: endDate
             }
-        })
+        };
+
+        // Filter by Mode
+        if (mode) {
+            // If mode is specified, return plans FOR that mode
+            filter.mode = mode;
+        } else {
+            // If mode is NOT specified (Family Tab), return plans WITHOUT mode
+            // This ensures strict separation
+            filter.mode = { $in: [null, undefined, ""] };
+        }
+
+        const plans = await MealPlan.find(filter)
             .populate('foodId', 'name image unitId categoryId') // Populate Fridge Item
             .populate('recipeId', 'name image nutrition ingredients htmlContent') // Populate Recipe Item
             .sort({ session: 1 });
