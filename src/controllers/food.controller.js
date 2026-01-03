@@ -3,6 +3,9 @@ const Category = require('../models/category');
 const Unit = require('../models/unit');
 const sendResponse = require('../utils/responseHelper');
 
+const fs = require('fs');
+const path = require('path');
+
 // 1. Tạo thực phẩm mới (Create Food)
 exports.createFood = async (req, res) => {
     try {
@@ -145,8 +148,26 @@ exports.deleteFood = async (req, res) => {
             return sendResponse(res, 404, "00180", "Không tìm thấy thực phẩm với tên đã cung cấp.");
         }
 
-        // Check quyền
-        // if (req.user.role !== 'admin' ...)
+        // Delete image if exists
+        if (food.image) {
+            try {
+                // Assuming food.image is relative path like 'uploads/file.jpg'
+                // We resolve it relative to the project root (where process.cwd() usually is, or relative to this file)
+                // Since this file is in src/controllers, and uploads is in root/uploads
+                // path.join(__dirname, '../../', food.image) might be safer if food.image is relative
+
+                // Check if it is a local file path (not http)
+                if (!food.image.startsWith('http')) {
+                    const absolutePath = path.resolve(food.image);
+                    if (fs.existsSync(absolutePath)) {
+                        fs.unlinkSync(absolutePath);
+                    }
+                }
+            } catch (err) {
+                console.error("Failed to delete image file:", err);
+                // Continue to delete db record even if file delete fails
+            }
+        }
 
         await Food.findByIdAndDelete(food._id);
         return sendResponse(res, 200, "00184", "Xóa thực phẩm thành công.");
