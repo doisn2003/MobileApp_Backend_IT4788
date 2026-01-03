@@ -2,34 +2,92 @@ const Recipe = require('../models/Recipe');
 const Food = require('../models/food');
 const sendResponse = require('../utils/responseHelper');
 
+// Helper to filter by Mode
+const getFilterByMode = (mode) => {
+    switch (mode) {
+        case 'Gymer':
+            return {
+                'nutrition.kcal': { $gt: 100, $lt: 200 },
+                'nutrition.protein': { $gt: 18 },
+                'nutrition.fat': { $lt: 8 },
+                'nutrition.carb': { $lt: 20 }
+            };
+        case 'Gain Weight':
+            return {
+                'nutrition.kcal': { $gt: 180, $lt: 350 },
+                'nutrition.protein': { $gte: 8 },
+                'nutrition.fat': { $gte: 8 },
+                'nutrition.carb': { $gte: 20 }
+            };
+        case 'Lose Weight':
+            return {
+                'nutrition.kcal': { $lte: 120 },
+                'nutrition.protein': { $gte: 12 },
+                'nutrition.fat': { $lte: 5 },
+                'nutrition.carb': { $lte: 10 }
+            };
+        case 'Vegan':
+            // Tag based or strict nutrition as user requested?
+            // User said: "Vegan: protein < 2, fat < 2" which is weird for Vegan (beans are high protein).
+            // But I must follow user instruction "Vegan: protein < 2, fat < 2" literally.
+            // Also checking tags probably safer if user tagged it.
+            // Let's implement BOTH: Either has tag 'Vegan' OR fits the nutritional profile?
+            // Actually user instructions clarify: "Vegan: protein < 2, fat < 2"
+            return {
+                $or: [
+                    { tags: 'Vegan' },
+                    {
+                        'nutrition.protein': { $lt: 2 },
+                        'nutrition.fat': { $lt: 2 }
+                    }
+                ]
+            };
+        default:
+            return {};
+    }
+};
+
 // 1. Tạo công thức (Create Recipe)
 exports.createRecipe = async (req, res) => {
     try {
-        const { foodName, name, htmlContent, description } = req.body;
+        let {
+            name, htmlContent, description,
+            ingredients, nutrition, tags
+        } = req.body;
+        const file = req.file;
 
-        // Check 00358: Thiếu trường bắt buộc
-        if (!foodName || !name || !htmlContent || !description) {
-            return sendResponse(res, 400, "00358", "Vui lòng cung cấp tất cả các trường bắt buộc");
+        // Parse JSON strings if coming from FormData
+        try {
+            if (typeof ingredients === 'string') ingredients = JSON.parse(ingredients);
+            if (typeof nutrition === 'string') nutrition = JSON.parse(nutrition);
+            if (typeof tags === 'string') tags = JSON.parse(tags);
+        } catch (e) { }
+
+        // Validations
+        if (!name) return sendResponse(res, 400, "00358", "Thiếu tên công thức");
+        if (!ingredients || !Array.isArray(ingredients) || ingredients.length === 0) {
+            return sendResponse(res, 400, "00358", "Cần có danh sách nguyên liệu");
         }
 
         if (!req.user.groupId) {
             return sendResponse(res, 400, "00345", "Bạn chưa vào nhóm nào");
         }
 
-        // --- Tìm Food ID từ Name ---
-        const food = await Food.findOne({ name: foodName, groupId: req.user.groupId });
-
-        // Check 00354: Không tìm thấy thực phẩm
-        if (!food) {
-            return sendResponse(res, 404, "00354", "Không tìm thấy thực phẩm với tên đã cung cấp");
+        // Image handling
+        let imagePath = '';
+        if (file) {
+            imagePath = file.path.replace(/\\/g, "/");
         }
 
         // Tạo Recipe
         const newRecipe = new Recipe({
             name,
-            foodId: food._id,
             htmlContent,
             description,
+            ingredients,
+            nutrition: nutrition || { kcal: 0, protein: 0, fat: 0, carb: 0 },
+            tags: tags || [],
+            image: imagePath,
             groupId: req.user.groupId,
             createdBy: req.user._id
         });
@@ -43,24 +101,22 @@ exports.createRecipe = async (req, res) => {
     }
 };
 
-// 2. Lấy công thức theo ID món ăn (Get recipes by food id)
-exports.getRecipesByFood = async (req, res) => {
+// 2. Lấy danh sách công thức (Get All Recipes with Filter)
+exports.getAllRecipes = async (req, res) => {
     try {
-        [cite_start]// API yêu cầu truyền qua query params: ?foodId=... [cite: 71]
-        // Tuy nhiên, logic thực tế thường user bấm vào "Thịt bò" -> App gửi foodId lên
-        const { foodId } = req.query;
+        const { mode } = req.query; // 'Gymer', 'Gain Weight', etc.
+        const query = { groupId: req.user.groupId };
 
-        if (!foodId) {
-            // Nếu không gửi foodId, có thể trả về list rỗng hoặc lỗi tùy logic.
-            // Ở đây ta trả về lỗi cho chặt chẽ
-            return sendResponse(res, 400, "00022", "Không có ID được cung cấp");
+        if (mode) {
+            const modeFilter = getFilterByMode(mode);
+            Object.assign(query, modeFilter);
         }
 
-        const recipes = await Recipe.find({ foodId: foodId, groupId: req.user.groupId });
-
-        return sendResponse(res, 200, "00378", "Lấy các công thức thành công", recipes);
+        const recipes = await Recipe.find(query).sort({ createdAt: -1 });
+        return sendResponse(res, 200, "00378", "Lấy danh sách công thức thành công", recipes);
 
     } catch (error) {
+        console.error(error);
         return sendResponse(res, 500, "00008", "Lỗi server");
     }
 };
@@ -68,22 +124,26 @@ exports.getRecipesByFood = async (req, res) => {
 // 3. Cập nhật công thức
 exports.updateRecipe = async (req, res) => {
     try {
-        const { recipeId, newHtmlContent, newName, newDescription } = req.body;
+        const {
+            recipeId, name, htmlContent, description,
+            ingredients, nutrition, tags, image
+        } = req.body;
 
-        if (!recipeId) return sendResponse(res, 400, "00359", "Vui lòng cung cấp một ID công thức.");
-        if (!newHtmlContent && !newName && !newDescription) {
-            return sendResponse(res, 400, "00360", "Vui lòng cung cấp ít nhất một trong các trường cần sửa.");
-        }
+        if (!recipeId) return sendResponse(res, 400, "00359", "Thiếu ID công thức");
 
         const recipe = await Recipe.findOne({ _id: recipeId, groupId: req.user.groupId });
-        if (!recipe) return sendResponse(res, 404, "00373", "Không tìm thấy công thức với ID đã cung cấp");
+        if (!recipe) return sendResponse(res, 404, "00373", "Không tìm thấy công thức");
 
-        if (newHtmlContent) recipe.htmlContent = newHtmlContent;
-        if (newName) recipe.name = newName;
-        if (newDescription) recipe.description = newDescription;
+        if (name) recipe.name = name;
+        if (htmlContent) recipe.htmlContent = htmlContent;
+        if (description) recipe.description = description;
+        if (ingredients) recipe.ingredients = ingredients;
+        if (nutrition) recipe.nutrition = nutrition;
+        if (tags) recipe.tags = tags;
+        if (image) recipe.image = image;
 
         await recipe.save();
-        return sendResponse(res, 200, "00370", "Cập nhật công thức nấu ăn thành công", recipe);
+        return sendResponse(res, 200, "00370", "Cập nhật công thức thành công", recipe);
 
     } catch (error) {
         console.error(error);
@@ -95,13 +155,12 @@ exports.updateRecipe = async (req, res) => {
 exports.deleteRecipe = async (req, res) => {
     try {
         const { recipeId } = req.body;
-
-        if (!recipeId) return sendResponse(res, 400, "00372", "Vui lòng cung cấp một ID công thức hợp lệ.");
+        if (!recipeId) return sendResponse(res, 400, "00372", "Thiếu ID công thức");
 
         const recipe = await Recipe.findOneAndDelete({ _id: recipeId, groupId: req.user.groupId });
-        if (!recipe) return sendResponse(res, 404, "00373", "Không tìm thấy công thức với ID đã cung cấp.");
+        if (!recipe) return sendResponse(res, 404, "00373", "Không tìm thấy công thức");
 
-        return sendResponse(res, 200, "00376", "Công thức của bạn đã được xóa thành công.");
+        return sendResponse(res, 200, "00376", "Xóa công thức thành công");
 
     } catch (error) {
         return sendResponse(res, 500, "00008", "Lỗi server");
