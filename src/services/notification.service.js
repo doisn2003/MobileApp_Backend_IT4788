@@ -13,6 +13,7 @@ if (!admin.apps.length) {
         console.log('✅ Firebase Admin SDK initialized');
     } catch (error) {
         console.error('❌ Firebase initialization error:', error);
+        throw error;
     }
 }
 

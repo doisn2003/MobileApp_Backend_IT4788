@@ -3,7 +3,7 @@ const Food = require('../models/food');
 const Category = require('../models/category');
 const Unit = require('../models/unit');
 const sendResponse = require('../utils/responseHelper');
-const notificationService = require('.../services/notification.service');
+const notificationService = require('../services/notification.service');
 const cron = require('node-cron');
 const dayjs = require('dayjs');
 

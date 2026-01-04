@@ -127,11 +127,11 @@ exports.updateFcmToken = async (req, res) => {
         await req.user.save();
 
         // console.log(`✅ Updated FCM token for user: ${req.user.username}`);
-        return sendResponse(res, 200, "10047", "Cập nhật FCM Token thành công");
+        return sendResponse(res, 200, "00047", "Cập nhật FCM Token thành công");
 
     } catch (error) {
         console.error('Error updating FCM token:', error);
-        return sendResponse(res, 500, "10008", "Lỗi server khi cập nhật FCM token");
+        return sendResponse(res, 500, "00008", "Lỗi server khi cập nhật FCM token");
     }
 };
 

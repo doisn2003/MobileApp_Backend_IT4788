@@ -81,7 +81,7 @@ exports.addMember = async (req, res) => {
                 await notificationService.sendPushNotification(
                     memberToAdd.fcmToken,
                     'Chào mừng đến nhóm!',
-                    `Bạn đã được thêm vào nhóm "${currentGroup.name}" bởi ${currentUser.name}`,
+                    `Bạn đã được thêm vào nhóm "${currentGroup.name}"!`,
                     { 
                         type: 'new_member',
                         groupId: currentGroup._id.toString(),
@@ -158,12 +158,12 @@ exports.removeMember = async (req, res) => {
         }
 
         // Gửi PUSH notification (về việc bị xoá khỏi nhóm)
-        if (memberToAdd.fcmToken) {
+        if (memberUser && memberUser.fcmToken) {
             try {
                 await notificationService.sendPushNotification(
-                    memberToAdd.fcmToken,
+                    memberUser.fcmToken,
                     'Bạn đã bị xoá khỏi nhóm!',
-                    `Bạn đã bị xoá khỏi nhóm "${currentGroup.name}" bởi ${currentUser.name}`,
+                    `Bạn đã bị xoá khỏi nhóm "${currentGroup.name}"!`,
                     { 
                         type: 'removed_member',
                         groupId: currentGroup._id.toString(),
