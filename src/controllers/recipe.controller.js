@@ -7,14 +7,14 @@ const getFilterByMode = (mode) => {
     switch (mode) {
         case 'Gymer':
             return {
-                'nutrition.kcal': { $gt: 100, $lt: 200 },
+                'nutrition.kcal': { $gt: 100 },
                 'nutrition.protein': { $gt: 18 },
                 'nutrition.fat': { $lt: 8 },
                 'nutrition.carb': { $lt: 20 }
             };
         case 'Gain Weight':
             return {
-                'nutrition.kcal': { $gt: 180, $lt: 350 },
+                'nutrition.kcal': { $gt: 180 },
                 'nutrition.protein': { $gte: 8 },
                 'nutrition.fat': { $gte: 8 },
                 'nutrition.carb': { $gte: 20 }
