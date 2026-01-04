@@ -53,7 +53,7 @@ exports.register = async (req, res) => {
 // Đăng nhập (Login)
 exports.login = async (req, res) => {
     try {
-        const { email, password } = req.body;
+        const { email, password, fcmToken } = req.body;
 
         // Check thiếu thông tin (Mã 00005)
         if (!email || !password) {
@@ -72,6 +72,13 @@ exports.login = async (req, res) => {
         if (!isMatch) {
             // Sai pass (Mã 00045)
             return sendResponse(res, 400, "00045", "Bạn đã nhập một email hoặc mật khẩu không hợp lệ.");
+        }
+
+        // Cập nhật FCM Token nếu có
+        if (fcmToken) {
+            user.fcmToken = fcmToken;
+            await user.save();
+            // console.log(`✅ Updated FCM token during login for: ${user.username}`);
         }
 
         // Tạo Token
@@ -105,6 +112,29 @@ exports.login = async (req, res) => {
     }
 };
 
+// Cập nhật FCM Token (dùng để hiện thông báo)
+exports.updateFcmToken = async (req, res) => {
+    try {
+        const { fcmToken } = req.body;
+
+        // Kiểm tra thiếu token
+        if (!fcmToken) {
+            return sendResponse(res, 400, "00038", "Vui lòng cung cấp fcmToken!");
+        }
+
+        // Cập nhật token cho user hiện tại
+        req.user.fcmToken = fcmToken;
+        await req.user.save();
+
+        // console.log(`✅ Updated FCM token for user: ${req.user.username}`);
+        return sendResponse(res, 200, "00047", "Cập nhật FCM Token thành công");
+
+    } catch (error) {
+        console.error('Error updating FCM token:', error);
+        return sendResponse(res, 500, "00008", "Lỗi server khi cập nhật FCM token");
+    }
+};
+
 // Quên mật khẩu (Forgot Password)
 exports.forgotPassword = async (req, res) => {
     try {
@@ -132,6 +162,13 @@ exports.forgotPassword = async (req, res) => {
 // Đăng xuất (Logout)
 exports.logout = async (req, res) => {
     try {
+        // Xoá FCM token để ngừng nhận notification
+        if (req.user) {
+            req.user.fcmToken = '';
+            await req.user.save();
+            // console.log(`✅ Cleared FCM token for user: ${req.user.username}`);
+        }
+
         // Vì dùng JWT stateless, server không cần làm gì nhiều trừ khi có blacklist
         return sendResponse(res, 200, "00049", "Đăng xuất thành công.");
     } catch (error) {
