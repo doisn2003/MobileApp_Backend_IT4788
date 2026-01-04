@@ -12,7 +12,8 @@ const userSchema = new mongoose.Schema({
     // Các trường đề bài yêu cầu thêm
     language: { type: String, default: 'vi' },
     timezone: { type: String, default: 'GMT+7' },
-    deviceId: { type: String, default: '' }
+    deviceId: { type: String, default: '' },
+    fcmToken: { type: String, default: '' }
 }, { timestamps: true }); 
 
 module.exports = mongoose.model('User', userSchema);

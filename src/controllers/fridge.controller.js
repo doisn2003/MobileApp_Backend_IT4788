@@ -3,6 +3,9 @@ const Food = require('../models/food');
 const Category = require('../models/category');
 const Unit = require('../models/unit');
 const sendResponse = require('../utils/responseHelper');
+const notificationService = require('../services/notification.service');
+const cron = require('node-cron');
+const dayjs = require('dayjs');
 
 // 1. Thêm đồ vào tủ lạnh (Kèm logic tạo Food nếu chưa có)
 exports.createFridgeItem = async (req, res) => {
@@ -187,3 +190,56 @@ exports.getFridgeItemDetail = async (req, res) => {
         return sendResponse(res, 500, "00008", "Lỗi server");
     }
 };
+
+// 6. Thông báo đồ sắp/đã hết hạn vào 7h sáng hàng ngày
+cron.schedule('0 7 * * *', async () => {
+    try {
+        const today = dayjs().startOf('day');
+
+        // Lấy tất cả item có hạn sử dụng
+        const items = await FridgeItem.find({ useWithin: { $exists: true } })
+            .populate('foodId', 'name groupId');
+
+        // Gom theo group
+        const grouped = {};
+        for (const item of items) {
+            const groupId = item.groupId?.toString() || item.foodId?.groupId?.toString();
+            if (!groupId) continue;
+
+            const expDate = dayjs(item.useWithin);
+            const diff = expDate.diff(today, 'day'); // số ngày còn lại
+
+            if (!grouped[groupId]) grouped[groupId] = { expiring: [], expired: [] };
+            if (diff < 0) {
+                grouped[groupId].expired.push(item.foodId?.name || 'Thực phẩm');
+            } else if (diff <= 2) {
+                grouped[groupId].expiring.push(item.foodId?.name || 'Thực phẩm');
+            }
+        }
+
+        // Gửi thông báo cho từng group
+        const groupIds = Object.keys(grouped);
+        for (const gid of groupIds) {
+            const { expiring, expired } = grouped[gid];
+
+            if (expiring.length > 0) {
+                await notificationService.sendToGroup(
+                    gid,
+                    'Thực phẩm sắp hết hạn',
+                    `Các món: ${expiring.join(', ')} sẽ hết hạn trong 2 ngày tới.`,
+                    { type: 'fridge_expiring', groupId: gid }
+                );
+            }
+            if (expired.length > 0) {
+                await notificationService.sendToGroup(
+                    gid,
+                    'Thực phẩm đã hết hạn',
+                    `Các món: ${expired.join(', ')} đã quá hạn. Vui lòng kiểm tra.`,
+                    { type: 'fridge_expired', groupId: gid }
+                );
+            }
+        }
+    } catch (error) {
+        console.error('❌ Cron fridge notification error:', error);
+    }
+});

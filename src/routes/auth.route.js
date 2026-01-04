@@ -37,4 +37,7 @@ router.post('/refresh-token', authController.refreshToken);
 // Delete Account: DELETE /user/
 router.delete('/', authMiddleware, authController.deleteAccount);
 
+// Update FCM Token: POST /user/update-fcm-token/
+router.post('/update-fcm-token', authMiddleware, authController.updateFcmToken);
+
 module.exports = router;
