@@ -21,4 +21,10 @@ router.post('/remove', groupController.removeMember);
 // DELETE /user/group/ -> Xóa nhóm
 router.delete('/', groupController.deleteGroup);
 
+// GET /user/group/messages -> Lấy tin nhắn nhóm
+router.get('/messages', groupController.getGroupMessages);
+
+// GET /user/group/info -> Lấy thông tin nhóm
+router.get('/info', groupController.getGroupInfo);
+
 module.exports = router;
