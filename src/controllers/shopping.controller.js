@@ -65,6 +65,14 @@ exports.createTasks = async (req, res) => {
         if (!shoppingList) return sendResponse(res, 404, "00283", "Không tìm thấy danh sách mua sắm");
 
         // Check quyền: Phải cùng nhóm mới được thêm task
+        if (!req.user.groupId) {
+            return sendResponse(res, 403, "00281", "Người dùng chưa tham gia nhóm nào");
+        }
+        if (!shoppingList.groupId) {
+            // Trường hợp hy hữu dữ liệu cũ lỗi
+            return sendResponse(res, 403, "00281", "Danh sách không hợp lệ (thiếu nhóm)");
+        }
+
         if (shoppingList.groupId.toString() !== req.user.groupId.toString()) {
             return sendResponse(res, 403, "00281", "Bạn không có quyền thêm vào danh sách nhóm khác");
         }
