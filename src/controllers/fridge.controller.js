@@ -32,18 +32,24 @@ exports.createFridgeItem = async (req, res) => {
         let food = await Food.findOne({ name: foodName, groupId: req.user.groupId });
 
         if (!food) {
-            // Food chưa tồn tại => Yêu cầu Category và Unit để tạo mới
-            if (!categoryName || !unitName) {
-                return sendResponse(res, 400, "00203_X", "Thực phẩm này chưa có trong hệ thống. Vui lòng chọn Danh mục và Đơn vị tính để tạo mới.");
+            // Food chưa tồn tại => Tự động tạo mới
+            // Nếu thiếu categoryName hoặc unitName thì gán giá trị mặc định để không lỗi
+            const targetCategoryName = categoryName || 'Khác';
+            const targetUnitName = unitName || 'cái';
+
+            // Tìm hoặc Tạo Category
+            let category = await Category.findOne({ name: targetCategoryName });
+            if (!category) {
+                category = new Category({ name: targetCategoryName });
+                await category.save();
             }
 
-            // Tìm Category
-            const category = await Category.findOne({ name: categoryName });
-            if (!category) return sendResponse(res, 404, "00155", "Không tìm thấy danh mục này");
-
-            // Tìm Unit
-            const unit = await Unit.findOne({ name: unitName });
-            if (!unit) return sendResponse(res, 404, "00153", "Không tìm thấy đơn vị tính này");
+            // Tìm hoặc Tạo Unit
+            let unit = await Unit.findOne({ name: targetUnitName });
+            if (!unit) {
+                unit = new Unit({ name: targetUnitName });
+                await unit.save();
+            }
 
             // Xử lý ảnh
             let imagePath = '';
@@ -73,7 +79,6 @@ exports.createFridgeItem = async (req, res) => {
         // Check 00199: Món này đã có trong tủ chưa?
 
         const existingItem = await FridgeItem.findOne({ foodId: food._id, groupId: req.user.groupId });
-        // Nếu muốn cho phép cùng 1 loại thực phẩm nhưng khác date/compartment, ta bỏ check này hoặc sửa query.
         // User không yêu cầu cụ thể, nhưng để tránh conflict data, ta giữ 00199.
         if (existingItem) {
             return sendResponse(res, 400, "00199", "Mục trong tủ lạnh cho thực phẩm đã tồn tại. Vui lòng cập nhật số lượng thay vì tạo mới.");

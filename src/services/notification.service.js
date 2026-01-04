@@ -1,19 +1,24 @@
 const admin = require('firebase-admin');
 
 // Khởi tạo Firebase Admin SDK (chỉ 1 lần)
+// Khởi tạo Firebase Admin SDK (chỉ 1 lần)
 if (!admin.apps.length) {
-    try {
-        admin.initializeApp({
-            credential: admin.credential.cert({
-                projectId: process.env.FIREBASE_PROJECT_ID,
-                clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-                privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n')
-            })
-        });
-        console.log('✅ Firebase Admin SDK initialized');
-    } catch (error) {
-        console.error('❌ Firebase initialization error:', error);
-        throw error;
+    if (process.env.FIREBASE_PROJECT_ID) {
+        try {
+            admin.initializeApp({
+                credential: admin.credential.cert({
+                    projectId: process.env.FIREBASE_PROJECT_ID,
+                    clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+                    privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n')
+                })
+            });
+            console.log('✅ Firebase Admin SDK initialized');
+        } catch (error) {
+            console.error('❌ Firebase initialization error:', error.message);
+            // Không throw error để server vẫn chạy được
+        }
+    } else {
+        console.warn('⚠️  Missing FIREBASE_PROJECT_ID in .env, skipping Firebase init.');
     }
 }
 
@@ -33,9 +38,9 @@ exports.sendPushNotification = async (fcmToken, title, body, data = {}) => {
 
     try {
         const message = {
-            notification: { 
-                title, 
-                body 
+            notification: {
+                title,
+                body
             },
             data, // VD: { groupId: "123", type: "new_member" }
             token: fcmToken
@@ -46,13 +51,13 @@ exports.sendPushNotification = async (fcmToken, title, body, data = {}) => {
         return response;
     } catch (error) {
         console.error('❌ Error sending notification:', error);
-        
+
         // Nếu token không hợp lệ, có thể xóa khỏi DB
-        if (error.code === 'messaging/invalid-registration-token' || 
+        if (error.code === 'messaging/invalid-registration-token' ||
             error.code === 'messaging/registration-token-not-registered') {
             console.warn('⚠️  Invalid FCM token, should remove from database');
         }
-        
+
         throw error;
     }
 };

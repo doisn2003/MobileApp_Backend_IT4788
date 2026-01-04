@@ -81,21 +81,22 @@ exports.createTasks = async (req, res) => {
         const createdTasks = [];
 
         for (const item of tasks) {
-            // Tìm FoodId từ foodName
+            // Tìm FoodId từ foodName (nếu có)
             const food = await Food.findOne({ name: item.foodName, groupId: req.user.groupId });
 
-            // Nếu không tìm thấy món ăn, return lỗi luôn (hoặc bỏ qua tùy logic)
-            // Theo mã lỗi 00285: Không tìm thấy món ăn
-            if (!food) {
-                return sendResponse(res, 404, "00285", `Không tìm thấy món ăn: ${item.foodName}`);
+            // Tạo Task
+            const newTaskData = {
+                listId: listId,
+                name: item.foodName, // Luôn lưu tên món để hiển thị
+                quantity: item.quantity
+            };
+
+            // Nếu tìm thấy món trong DB thì link vào để lấy ảnh/thông tin thêm
+            if (food) {
+                newTaskData.foodId = food._id;
             }
 
-            // Tạo Task
-            const newTask = new Task({
-                listId: listId,
-                foodId: food._id,
-                quantity: item.quantity
-            });
+            const newTask = new Task(newTaskData);
             await newTask.save();
             createdTasks.push(newTask);
         }
@@ -123,7 +124,6 @@ exports.getShoppingLists = async (req, res) => {
     }
 };
 
-// 4. Lấy chi tiết các Task trong 1 List
 // 4. Lấy chi tiết các Task trong 1 List
 exports.getTasksByList = async (req, res) => {
     try {
@@ -202,11 +202,17 @@ exports.updateTask = async (req, res) => {
             return sendResponse(res, 403, "00281", "Bạn không có quyền sửa task này");
         }
 
-        // Logic update: nếu đổi tên món, thì phải đổi ID món
-        const newFood = await Food.findOne({ name: newFoodName, groupId: req.user.groupId });
-        if (!newFood) return sendResponse(res, 404, "00285", "Không tìm thấy món ăn mới");
+        // Logic update: Cập nhật tên mới
+        task.name = newFoodName;
 
-        task.foodId = newFood._id;
+        // Tìm xem có món này trong DB không để link
+        const newFood = await Food.findOne({ name: newFoodName, groupId: req.user.groupId });
+        if (newFood) {
+            task.foodId = newFood._id;
+        } else {
+            task.foodId = null; // Món tự do, không link
+        }
+
         await task.save();
 
         return sendResponse(res, 200, "00312", "Cập nhật nhiệm vụ thành công");
