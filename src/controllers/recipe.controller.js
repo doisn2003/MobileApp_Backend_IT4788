@@ -22,23 +22,17 @@ const getFilterByMode = (mode) => {
         case 'Lose Weight':
             return {
                 'nutrition.kcal': { $lte: 120 },
-                'nutrition.protein': { $gte: 12 },
-                'nutrition.fat': { $lte: 5 },
-                'nutrition.carb': { $lte: 10 }
+                'nutrition.protein': { $gte: 2 },
+                'nutrition.fat': { $lte: 10 }, 
+                'nutrition.carb': { $lte: 10 } 
             };
         case 'Vegan':
-            // Tag based or strict nutrition as user requested?
-            // User said: "Vegan: protein < 2, fat < 2" which is weird for Vegan (beans are high protein).
-            // But I must follow user instruction "Vegan: protein < 2, fat < 2" literally.
-            // Also checking tags probably safer if user tagged it.
-            // Let's implement BOTH: Either has tag 'Vegan' OR fits the nutritional profile?
-            // Actually user instructions clarify: "Vegan: protein < 2, fat < 2"
             return {
                 $or: [
                     { tags: 'Vegan' },
                     {
-                        'nutrition.protein': { $lt: 2 },
-                        'nutrition.fat': { $lt: 2 }
+                        'nutrition.protein': { $lt: 3 },
+                        'nutrition.fat': { $lt: 3 }
                     }
                 ]
             };
