@@ -10,7 +10,7 @@ const getFilterByMode = (mode) => {
                 'nutrition.kcal': { $gt: 100 },
                 'nutrition.protein': { $gt: 18 },
                 'nutrition.fat': { $lt: 8 },
-                'nutrition.carb': { $lt: 20 }
+                'nutrition.carb': { $gt: 10 }
             };
         case 'Gain Weight':
             return {
