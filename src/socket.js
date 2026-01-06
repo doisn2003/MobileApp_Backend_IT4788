@@ -56,8 +56,9 @@ exports.init = (server) => {
                 // Send to group (excluding sender ideally, but service handles logic check?)
                 // The current service sends to ALL members of group. 
                 // Optimization: Maybe update service to exclude sender, but for now use existing.
-                await notificationService.sendToGroup(
+                await notificationService.sendToGroupExceptOnes(
                     groupId,
+                    [sender],
                     `Tin nhắn mới từ ${senderName}`,
                     content,
                     { type: 'chat', groupId: groupId, messageId: newMessage._id.toString() }

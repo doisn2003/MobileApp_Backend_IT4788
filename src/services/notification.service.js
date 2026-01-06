@@ -95,10 +95,10 @@ exports.sendToMultipleUsers = async (users, title, body) => {
 
 /**
  * Gửi notification đến tất cả thành viên của một group
- * @param {string} groupId
- * @param {string} title
- * @param {string} body
- * @param {object} data
+ * @param {string} groupId - ID nhóm
+ * @param {string} title - Tiêu đề
+ * @param {string} body - Nội dung
+ * @param {object} data - Dữ liệu bổ sung (optional)
  */
 exports.sendToGroup = async (groupId, title, body, data = {}) => {
     try {
@@ -109,6 +109,54 @@ exports.sendToGroup = async (groupId, title, body, data = {}) => {
         }).select('fcmToken');
 
         const tokens = members.map(m => m.fcmToken).filter(Boolean);
+        if (tokens.length === 0) {
+            console.warn(`⚠️  No FCM tokens found for group ${groupId}`);
+            return null;
+        }
+
+        const message = {
+            notification: { title, body },
+            data,
+            tokens,
+            android: {
+                priority: 'high',
+                notification: { channelId: 'default-channel-id', sound: 'default', priority: 'high' }
+            },
+            apns: { payload: { aps: { sound: 'default', badge: 1 } } }
+        };
+
+        return await admin.messaging().sendEachForMulticast(message);
+    } catch (error) {
+        console.error('❌ Error sending group notification:', error);
+        throw error;
+    }
+};
+
+/**
+ * Gửi notification đến tất cả thành viên của một group, trừ những user trong danh sách loại trừ
+ * @param {string} groupId - ID nhóm
+ * @param {Array} users - Mảng user object cần loại trừ
+ * @param {string} title - Tiêu đề thông báo
+ * @param {string} body - Nội dung thông báo
+ * @param {object} data - Dữ liệu bổ sung (optional)
+ */
+exports.sendToGroupExceptOnes = async (groupId, users, title, body, data = {}) => {
+    try {
+        const User = require('../models/user');
+        const excludedIds = new Set(
+            (users || [])
+                .map(u => (u?._id || u?.id || u)?.toString?.())
+                .filter(Boolean)
+        );
+        const members = await User.find({
+            groupId,
+            fcmToken: { $exists: true, $ne: '' }
+        }).select('fcmToken');
+
+        const tokens = members
+            .filter(m => !excludedIds.has(m._id.toString()))
+            .map(m => m.fcmToken)
+            .filter(Boolean);
         if (tokens.length === 0) {
             console.warn(`⚠️  No FCM tokens found for group ${groupId}`);
             return null;
