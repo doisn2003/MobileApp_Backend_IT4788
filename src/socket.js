@@ -30,15 +30,16 @@ exports.init = (server) => {
 
         // Send message
         socket.on('send_message', async (data) => {
-            // data: { groupId, senderId, content }
+            // data: { groupId, senderId, content, tempId }
             try {
-                const { groupId, senderId, content } = data;
+                const { groupId, senderId, content, tempId } = data;
 
                 // 1. Save to DB
                 const newMessage = new Message({
                     groupId,
                     senderId,
-                    content
+                    content,
+                    tempId
                 });
                 await newMessage.save();
 

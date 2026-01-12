@@ -4,6 +4,7 @@ const messageSchema = new mongoose.Schema({
     groupId: { type: mongoose.Schema.Types.ObjectId, ref: 'Group', required: true },
     senderId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
     content: { type: String, required: true },
+    tempId: { type: String }, // For temporary client-side IDs
     type: { type: String, default: 'text' }, // text, image, etc.
 }, { timestamps: true });
 
